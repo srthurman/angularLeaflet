@@ -1,0 +1,19 @@
+{
+  "name": "angularleaflet",
+  "version": "1.0.0",
+  "description": "Demo project using Angular and Leaflet",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srthurman/angularLeaflet.git"
+  },
+  "author": "Sara Thurman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/srthurman/angularLeaflet/issues"
+  },
+  "homepage": "https://github.com/srthurman/angularLeaflet#readme"
+}
