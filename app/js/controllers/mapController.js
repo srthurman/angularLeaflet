@@ -1,13 +1,16 @@
 'use strict';
 
-app.controller("LayersEsriDynamicLayerController", [ "$scope", '$http', function($scope, $http) {
+//global object
+var mapControllerObject = {};
+
+app.controller("LayersEsriDynamicLayerController", [ "$scope", '$http', "$log", "leafletData", function($scope, $http, $log, leafletData) {
             angular.extend($scope, {
                 blockLayer: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/2/query",
                 blockVars: {
                     xcoord: -77.016,
                     ycoord: 38.904
                 },
-                dc: {
+                center: {
 	            	lat: 38.904,
 	                lng: -77.016,
 	                zoom: 11
@@ -49,6 +52,7 @@ app.controller("LayersEsriDynamicLayerController", [ "$scope", '$http', function
                     }
                 },
                 
+                
                 findBlockLayer: function(blockVars) {
                     if (blockVars.hasOwnProperty('xcoord') && blockVars.hasOwnProperty('ycoord')) {
                         var endURL = "+&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&outSR=4326&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&f=json";
@@ -57,10 +61,26 @@ app.controller("LayersEsriDynamicLayerController", [ "$scope", '$http', function
                 }
             });
             
+            //set global object center
+            mapControllerObject['center'] = $scope.center;
+            
+             $scope.events = {
+                map: {
+                    enable: ['click'],
+                    logic: 'emit'
+                }
+            };
+            
+            $scope.$on('leafletDirectiveMap.click', function(event, args){
+                //differentiate between getting the block code and identifying features
+                    var leafEventLatLng = args.leafletEvent.latlng;
+                    $scope.center.lat = leafEventLatLng.lat;
+                    $scope.center.lng = leafEventLatLng.lng;
+                });
+            
+            
             $http.get($scope.findBlockLayer($scope.blockVars)).success(function(data, status) {
-                alert("success");
-                console.log(status);
-                console.log("data");
+                console.log("data loading");
                 console.log(data.features[0].geometry);
             });
         }]);
