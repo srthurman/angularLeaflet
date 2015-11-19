@@ -58,7 +58,7 @@
                             url: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Transportation/MapServer",
                             visible: true,
                             layerOptions: {
-                                showOnSelector: true,
+                                showOnSelector: false,
                                 layers: [],
                                 opacity: 0.9
                             }
@@ -66,12 +66,11 @@
                     },
                     overlays: {
                         stcou: {
-                            name: "StateCounties",
+                            name: "State / Counties",
                             type: "agsDynamic",
                             url: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer",
                             visible: true,
                             layerOptions: {
-                                showOnSelector: false,
                                 layers: [53], //empty array brings in all layers
                                 opacity: 0.5,
                                 attribution: "Data courtesy U.S. Census Bureau"
