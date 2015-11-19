@@ -29,16 +29,14 @@
                 initBlock: "@block",
                 initStreet: "@street",
                 initZip: "@zip",
-                initPlace: "@place",
-                blockID: "@data"
+                initPlace: "@place"
             },
             templateUrl: "templates/leafletMap.html",
             controller: function($scope, $http, $q, leafletData, leafletMapEvents, blockUtils) {
                 console.log(blockUtils.sayHi());
                 console.log(leafletMapEvents.getAvailableMapEvents());
-
-                console.log("$scope.data");
-                console.log($scope.blockID);
+                
+                $scope.blockid = '';
 
                 $scope.blockLayerUrl = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Census2010/MapServer";
 
@@ -207,7 +205,8 @@
                     $http.get(findBlock)
                         .then(function(resp) {
                             console.log("ADD BLOCK SUCCESS");
-                            console.log(resp.data.features[0].attributes);
+                            console.log(resp.data.features[0]);
+                            $scope.blockid = resp.data.features[0].attributes["GEOID"];
                             var lat = parseFloat(resp.data.features[0].attributes["CENTLAT"]);
                             var lng = parseFloat(resp.data.features[0].attributes["CENTLON"]);
                             var blockGeom = resp.data.features[0].geometry.rings;
@@ -314,7 +313,7 @@
                     //differentiate	between	getting	the	block	code and identifying features
                     var leafEventLatLng = args.leafletEvent.latlng;
 
-                    $scope.addMarker(leafEventLatLng.lng, leafEventLatLng.lat);
+                    $scope.addMarker(leafEventLatLng.lat, leafEventLatLng.lng);
 
                     $scope.addBlock(leafEventLatLng.lng, leafEventLatLng.lat);
                 });
