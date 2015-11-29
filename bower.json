@@ -21,6 +21,7 @@
     "angular": "1.2.28",
     "esri-leaflet": "~1.0.1",
     "leaflet": "~0.7.7",
-    "angular-leaflet-directive.min": "https://raw.githubusercontent.com/tombatossals/angular-leaflet-directive/master/dist/angular-leaflet-directive.min.js"
+    "angular-leaflet-directive.min": "https://raw.githubusercontent.com/tombatossals/angular-leaflet-directive/master/dist/angular-leaflet-directive.min.js",
+    "fuzzyset.js": "*"
   }
 }

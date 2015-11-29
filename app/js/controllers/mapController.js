@@ -3,6 +3,10 @@
     console.log("mapController.js");
 
     var app = angular.module("demoapp", ["leaflet-directive"]);
+    
+    app.config(function($logProvider){
+      $logProvider.debugEnabled(false);
+    });
 
     app.factory('blockUtils', function() {
         var hi = "hi";
@@ -16,7 +20,7 @@
         }
     });
 
-    app.directive('cenBlock', function() {
+    app.directive('cenBlock', function(leafletMapDefaults) {
         return {
             restrict: 'E',
             replace: true,
@@ -32,9 +36,26 @@
                 initPlace: "@place"
             },
             templateUrl: "templates/leafletMap.html",
-            controller: function($scope, $http, $q, leafletData, leafletMapEvents, blockUtils) {
-                console.log(blockUtils.sayHi());
-                console.log(leafletMapEvents.getAvailableMapEvents());
+            link: function(scope, element, attrs, ctrl) {
+                var layerPos = {
+                    controls: {
+                        layers: {
+                          visible: true,
+                          position: 'bottomleft',
+                          collapsed: true,
+                        },
+                      }
+                };
+                leafletMapDefaults.setDefaults(layerPos, attrs.id);
+            },
+            controller: function($scope, $http, $q, leafletData, leafletMapEvents, blockUtils, leafletMapDefaults) {
+                //console.log(blockUtils.sayHi());
+                //console.log(leafletMapEvents.getAvailableMapEvents());
+                //leafletData.getMap().then(function(map) {
+                //    console.log("MAP");
+                //    console.log(map);
+                //});
+                
                 
                 $scope.blockid = '';
 
