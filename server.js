@@ -6,6 +6,8 @@ var app = express();
 var rootPath = path.normalize(__dirname);
 //express.static() serves files in a directory w/out processing them
 app.use(express.static(rootPath + '/app'));
+app.use(express.static(rootPath + '/app/dist'));
+app.use(express.static(rootPath + '/bower_components'));
 
 app.listen(process.env.PORT, process.env.IP);
 console.log("Listening...");

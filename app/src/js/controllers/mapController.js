@@ -3,10 +3,10 @@
     console.log("mapController.js");
 
     var app = angular.module("demoapp", ["leaflet-directive"]);
-    
-    app.config(function($logProvider){
-      $logProvider.debugEnabled(false);
-    });
+
+/*    app.config(function($logProvider) {
+        $logProvider.debugEnabled(false);
+    });*/
 
     app.factory('blockUtils', function() {
         var hi = "hi";
@@ -16,7 +16,8 @@
         }
 
         return {
-            sayHi: sayHi
+            sayHi: sayHi,
+            hello: hi
         }
     });
 
@@ -36,27 +37,17 @@
                 initPlace: "@place"
             },
             templateUrl: "templates/leafletMap.html",
-            link: function(scope, element, attrs, ctrl) {
-                var layerPos = {
-                    controls: {
-                        layers: {
-                          visible: true,
-                          position: 'bottomleft',
-                          collapsed: true,
-                        },
-                      }
-                };
-                leafletMapDefaults.setDefaults(layerPos, attrs.id);
-            },
             controller: function($scope, $http, $q, leafletData, leafletMapEvents, blockUtils, leafletMapDefaults) {
                 //console.log(blockUtils.sayHi());
+                var bu = blockUtils;
+                console.log("BU");
+                console.log(bu);
                 //console.log(leafletMapEvents.getAvailableMapEvents());
                 //leafletData.getMap().then(function(map) {
                 //    console.log("MAP");
                 //    console.log(map);
                 //});
-                
-                
+
                 $scope.blockid = '';
 
                 $scope.blockLayerUrl = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Census2010/MapServer";
@@ -67,6 +58,8 @@
                         lat: 34.05
                     }
                 };
+                
+                $scope.eventBroadcast = ['click', 'zoomstart'];
 
                 $scope.layers = {
                     baselayers: {
@@ -189,8 +182,8 @@
                 //record map click event
                 $scope.events = {
                     map: {
-                        enable: ['click'],
-                        logic: 'emit'
+                        enable: ['click', 'load', 'zoomstart'],
+                        logic: 'broadcast'
                     }
                 };
 
@@ -316,8 +309,9 @@
                         queryLayer = "/98";
                         whereClause = "state='" + $scope.initState + "'";
 
-                    } else {
-                        $scope.setCenter(44,-99,5);
+                    }
+                    else {
+                        $scope.setCenter(44, -99, 5);
                         return '';
                     };
                     console.log([$scope.blockLayerUrl, queryLayer, "/query?geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&returnCountOnly=false&returnIdsOnly=false&returnGeometry=true&outSR=4326&outFields=*&f=json&where=", encodeURIComponent(whereClause)].join(''));
@@ -328,6 +322,16 @@
                 $scope.$on('leafletDirectiveMap.load', function(event, args) {
                     console.log('MAP LOADED');
                     $scope.initializeMap();
+                    var layerPos = {
+                        controls: {
+                            layers: {
+                                visible: true,
+                                position: 'bottomright',
+                                collapsed: true,
+                            },
+                        }
+                    };
+                    leafletMapDefaults.setDefaults(layerPos, '');
                 });
 
                 $scope.$on('leafletDirectiveMap.click', function(event, args) {
