@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "minjs": "uglifyjs app/src/js/**/*.js -o app/dist/js/map.js"
+    "minjs": "uglifyjs app/src/js/main.js app/src/js/**/*.js -o app/dist/js/map.js -b",
+    "lintjs": "eslint ./*.js ./**/*.js app/src/js",
+    "build": "npm run lintjs && npm run minjs",
+    "build:watch": "watch 'npm run build' ./app/src"
   },
   "repository": {
     "type": "git",
@@ -33,7 +36,9 @@
     "karma-jasmine": "^0.3.6"
   },
   "dependencies": {
+    "eslint": "^1.10.3",
     "express": "^4.13.3",
-    "uglify-js": "^2.6.1"
+    "uglify-js": "^2.6.1",
+    "watch": "^0.17.1"
   }
 }

@@ -2,26 +2,13 @@
     'use strict';
     console.log("mapController.js");
 
-    var app = angular.module("demoapp", ["leaflet-directive"]);
-
 /*    app.config(function($logProvider) {
         $logProvider.debugEnabled(false);
     });*/
 
-    app.factory('blockUtils', function() {
-        var hi = "hi";
-
-        function sayHi() {
-            return hi;
-        }
-
-        return {
-            sayHi: sayHi,
-            hello: hi
-        }
-    });
-
-    app.directive('cenBlock', function(leafletMapDefaults) {
+    angular
+        .module("cenblock.directive", [])
+        .directive('cenBlock', function(leafletMapDefaults) {
         return {
             restrict: 'E',
             replace: true,
@@ -37,16 +24,7 @@
                 initPlace: "@place"
             },
             templateUrl: "templates/leafletMap.html",
-            controller: function($scope, $http, $q, leafletData, leafletMapEvents, blockUtils, leafletMapDefaults) {
-                //console.log(blockUtils.sayHi());
-                var bu = blockUtils;
-                console.log("BU");
-                console.log(bu);
-                //console.log(leafletMapEvents.getAvailableMapEvents());
-                //leafletData.getMap().then(function(map) {
-                //    console.log("MAP");
-                //    console.log(map);
-                //});
+            controller: function($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults) {
 
                 $scope.blockid = '';
 
