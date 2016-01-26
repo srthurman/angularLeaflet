@@ -24,7 +24,8 @@
                 initPlace: "@place"
             },
             templateUrl: "templates/leafletMap.html",
-            controller: function($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults) {
+            controller: ['$scope', '$http', '$q', 'leafletData', 'leafletMapEvents', 'leafletMapDefaults', 'mapFactory',
+                function($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory) {
 
                 $scope.blockid = '';
 
@@ -69,9 +70,7 @@
                     }
                 };
 
-                $scope.controls = {
-                    scale: true
-                };
+                $scope.controls = mapFactory.getControls();
 
                 $scope.center = {
                     lat: 0,
@@ -301,14 +300,9 @@
                     console.log('MAP LOADED');
                     $scope.initializeMap();
                     var layerPos = {
-                        controls: {
-                            layers: {
-                                visible: true,
-                                position: 'bottomright',
-                                collapsed: true,
-                            },
-                        }
+                        controls: $scope.controls
                     };
+                    console.log(layerPos);
                     leafletMapDefaults.setDefaults(layerPos, '');
                 });
 
@@ -321,7 +315,7 @@
                     $scope.addBlock(leafEventLatLng.lng, leafEventLatLng.lat);
                 });
 
-            }
+            }]
         }
 
     });

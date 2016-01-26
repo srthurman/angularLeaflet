@@ -1,6 +1,4 @@
-(function() {
-    var app = angular.module("census.block", [ "leaflet-directive", "cenblock.directive" ]);
-})();
+"use strict";
 
 (function() {
     "use strict";
@@ -21,7 +19,7 @@
                 initPlace: "@place"
             },
             templateUrl: "templates/leafletMap.html",
-            controller: function($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults) {
+            controller: [ "$scope", "$http", "$q", "leafletData", "leafletMapEvents", "leafletMapDefaults", "mapFactory", function($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory) {
                 $scope.blockid = "";
                 $scope.blockLayerUrl = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Census2010/MapServer";
                 $scope.markers = {
@@ -59,9 +57,7 @@
                         }
                     }
                 };
-                $scope.controls = {
-                    scale: true
-                };
+                $scope.controls = mapFactory.getControls();
                 $scope.center = {
                     lat: 0,
                     lng: 0,
@@ -250,14 +246,9 @@
                     console.log("MAP LOADED");
                     $scope.initializeMap();
                     var layerPos = {
-                        controls: {
-                            layers: {
-                                visible: true,
-                                position: "bottomright",
-                                collapsed: true
-                            }
-                        }
+                        controls: $scope.controls
                     };
+                    console.log(layerPos);
                     leafletMapDefaults.setDefaults(layerPos, "");
                 });
                 $scope.$on("leafletDirectiveMap.click", function(event, args) {
@@ -265,7 +256,37 @@
                     $scope.addMarker(leafEventLatLng.lat, leafEventLatLng.lng);
                     $scope.addBlock(leafEventLatLng.lng, leafEventLatLng.lat);
                 });
-            }
+            } ]
         };
     });
+})();
+
+"use strict";
+
+(function() {
+    var app = angular.module("census.block", [ "leaflet-directive", "map.service", "cenblock.directive" ]);
+})();
+
+"use strict";
+
+(function() {
+    "use strict";
+    angular.module("map.service", []).factory("mapFactory", mapFactory);
+    function mapFactory() {
+        var myVar = "myVAR";
+        var service = {
+            getControls: getControls
+        };
+        function getControls() {
+            return {
+                scale: true,
+                layers: {
+                    visible: true,
+                    position: "topright",
+                    collapsed: true
+                }
+            };
+        }
+        return service;
+    }
 })();

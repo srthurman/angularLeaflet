@@ -5,9 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "minjs": "uglifyjs app/src/js/main.js app/src/js/**/*.js -o app/dist/js/map.js -b",
-    "lintjs": "eslint ./*.js ./**/*.js app/src/js",
-    "build": "npm run lintjs && npm run minjs",
+    "minjs2": "uglifyjs app/src/js/main.js app/src/js/**/*.js -o app/dist/js/map.js -b",
+    "minjs": "uglifyjs app/map-babel.js -o app/dist/js/map.js -b",
+    "lintjs": "eslint -c ./eslint.config.json ./*.js ./**/*.js app/src/js",
+    "babeljs:build": "babel app/src/js --out-file app/map-babel.js",
+    "babeljs:remove": "rm app/map-babel.js",
+    "build": "npm run lintjs && npm run babeljs:build && npm run minjs && npm run babeljs:remove",
     "build:watch": "watch 'npm run build' ./app/src"
   },
   "repository": {
@@ -21,6 +24,7 @@
   },
   "homepage": "https://github.com/srthurman/angularLeaflet#readme",
   "devDependencies": {
+    "babel-cli": "^6.4.5",
     "bower": "^1.4.1",
     "chalk": "^0.4.0",
     "cookie": "^0.1.3",
