@@ -51,15 +51,11 @@
                     console.log(arguments.length);
                     if ($scope.initState && $scope.initCounty && $scope.initTract && $scope.initBlock) {
                         blockFactory.addBlock($scope.blockLayerUrl,  $scope.initState, $scope.initCounty, $scope.initTract, $scope.initBlock)
-                        .then(function(resp) {
-                            $scope.blockid = resp;
-                        });
+                        .then(getBlockId);
                     }
                     else if ($scope.initLat && $scope.initLng) {
                         blockFactory.addBlock($scope.blockLayerUrl, $scope.initLng, $scope.initLat)
-                        .then(function(resp) {
-                            $scope.blockid = resp;
-                        });
+                        .then(getBlockId);
                     }
                     else {
                         var addressSearchUrl = $scope.getAddressSearchUrl();
@@ -69,7 +65,10 @@
 
                 };
 
-
+                function getBlockId(resp) {
+                            $scope.blockid = resp;
+                            $scope.baseLayer.bringToBack();      
+                        }
 
 
                 //record map click event
@@ -162,9 +161,7 @@
                     //$scope.addMarker(leafEventLatLng.lat, leafEventLatLng.lng);
                     $scope.markers = blockFactory.moveMarker(leafEventLatLng.lat, leafEventLatLng.lng);
                     blockFactory.addBlock($scope.blockLayerUrl, leafEventLatLng.lng, leafEventLatLng.lat)
-                        .then(function(resp) {
-                            $scope.blockid = resp;
-                        });
+                        .then(getBlockId);
                 });
 
             }]
