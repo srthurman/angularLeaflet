@@ -8,9 +8,9 @@
     "minjs2": "uglifyjs app/src/js/main.js app/src/js/**/*.js -o app/dist/js/map.js -b",
     "minjs": "uglifyjs app/map-babel.js -o app/dist/js/map.js -b",
     "lintjs": "eslint -c ./eslint.config.json ./*.js ./**/*.js app/src/js",
-    "babeljs:build": "babel app/src/js --out-file app/map-babel.js",
+    "babeljs:build": "babel app/src/js --out-file app/dist/js/map-babel.js",
     "babeljs:remove": "rm app/map-babel.js",
-    "build": "npm run lintjs && npm run babeljs:build && npm run minjs && npm run babeljs:remove",
+    "build": "npm run lintjs && npm run babeljs:build",
     "build:watch": "watch 'npm run build' ./app/src"
   },
   "repository": {

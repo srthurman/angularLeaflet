@@ -6,10 +6,16 @@
         .factory('mapFactory', mapFactory);
 
     function mapFactory() {
-        let myVar = "myVAR";
-
-        let service = {
-            getControls: getControls
+        var center = {
+            lat: 0,
+            lng: 0,
+            zoom: 14
+        }
+        
+        var service = {
+            getControls: getControls,
+            setCenter: setCenter,
+            center: center
         };
 
         function getControls() {
@@ -21,6 +27,14 @@
                     collapsed: true
                 }
             };
+        };
+
+        function setCenter(lat, lng, zoom) {
+            console.log("SET CENTER");
+            console.trace();
+            center.lat = lat;
+            center.lng = lng;
+            center.zoom = zoom;
         };
 
         return service;
