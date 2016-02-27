@@ -31,7 +31,6 @@
 
         function setCenter(lat, lng, zoom) {
             console.log("SET CENTER");
-            console.trace();
             center.lat = lat;
             center.lng = lng;
             center.zoom = zoom;

@@ -122,7 +122,6 @@
                     mapFactory.setCenter(lat, lng, 14);
                     setOverlay(blockGeojson);
                     deferred.resolve(blockID);
-                    //$scope.baseLayer.bringToBack();
                 });
            return deferred.promise;
         };

@@ -24,8 +24,8 @@
                 initPlace: "@place"
             },
             templateUrl: "templates/leafletMap.html",
-            controller: ['$scope', '$http', '$q', 'leafletData', 'leafletMapEvents', 'leafletMapDefaults', 'mapFactory', 'blockFactory',
-                function($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory, blockFactory) {
+            controller: ['$scope', '$http', '$q', 'leafletData', 'leafletMapEvents', 'leafletMapDefaults', 'mapFactory', 'blockFactory', 'addressFactory',
+                function($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory, blockFactory, addressFactory) {
 
                 $scope.blockid = '';
 
@@ -58,9 +58,9 @@
                         .then(getBlockId);
                     }
                     else {
-                        var addressSearchUrl = $scope.getAddressSearchUrl();
-                        //mapFactory.setCenter(34.181048,-118.223644);
-                        $scope.addAddressSearchResults(addressSearchUrl);
+                        var addressSearchUrl = addressFactory.getAddressSearchUrl();
+                    //mapFactory.setCenter(34.181048,-118.223644);
+                        addressFactory.addAddressSearchResults(addressSearchUrl, $scope.initStreet);
                     };
 
                 };
@@ -80,68 +80,6 @@
                 };
 
 
-                $scope.findStreet = function(street, geojsonRings) {
-                    console.log("FIND STREET");
-                    var streetGeojson = {
-                        "type": "Feature",
-                        "properties": {
-                            "name": "Street Search Area",
-                        },
-                        "geometry": {
-                            "type": "MultiPolygon",
-                            "coordinates": [geojsonRings]
-                        }
-                    };
-
-                    var streetSearchArea = L.geoJson(streetSearchArea);
-                    console.log(streetSearchArea);
-                };
-
-                $scope.addAddressSearchResults = function(searchUrl) {
-                    console.log("ADD ADDRESS SEARCH RESULTS");
-                    $http.get(searchUrl)
-                        .then(function(resp) {
-                            console.log("ADDRESS SEARCH RESULTS SUCCESS");
-
-                            if ($scope.initStreet) {
-                                $scope.findStreet($scope.initStreet, resp.data.features[0].geometry.rings);
-                            };
-
-                            var lat = parseFloat(resp.data.features[0].attributes["CENTLAT"]);
-                            var lng = parseFloat(resp.data.features[0].attributes["CENTLON"]);
-                            mapFactory.setCenter(lat, lng, 10);
-                        });
-                };
-
-                $scope.getAddressSearchUrl = function() {
-                    console.log("GET ADDRESS URL");
-                    var queryLayer = "";
-                    var whereClause = "";
-
-                    if ($scope.initZip && $scope.initZip !== '00000' && $scope.initZip.trim().length === 5) {
-                        queryLayer = "/8";
-                        whereClause = "zcta5='" + $scope.initZip + "'";
-                    }
-                    else if ($scope.initPlace && $scope.initPlace !== '99999' && $scope.initPlace.trim().length === 5) {
-                        queryLayer = "/34";
-                        whereClause = "state='" + $scope.initState + "' and place='" + $scope.initPlace + "'";
-                    }
-                    else if ($scope.initCounty && $scope.initState && $scope.initState.trim().length === 2 && $scope.initCounty.trim().length === 3) {
-                        queryLayer = "/100";
-                        whereClause = "state='" + $scope.initState + "' and county='" + $scope.initCounty + "'";
-                    }
-                    else if ($scope.initState && $scope.initState.trim().length === 2) {
-                        queryLayer = "/98";
-                        whereClause = "state='" + $scope.initState + "'";
-
-                    }
-                    else {
-                        mapFactory.setCenter(44, -99, 5);
-                        return '';
-                    };
-                    console.log([$scope.blockLayerUrl, queryLayer, "/query?geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&returnCountOnly=false&returnIdsOnly=false&returnGeometry=true&outSR=4326&outFields=*&f=json&where=", encodeURIComponent(whereClause)].join(''));
-                    return [$scope.blockLayerUrl, queryLayer, "/query?geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&returnCountOnly=false&returnIdsOnly=false&returnGeometry=true&outSR=4326&outFields=*&f=json&where=", encodeURIComponent(whereClause)].join('');
-                };
 
                 ///Event Listeners        
                 $scope.$on('leafletDirectiveMap.load', function(event, args) {

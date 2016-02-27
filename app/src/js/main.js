@@ -5,5 +5,6 @@
     ["leaflet-directive",
     "map.service",
     "block.service",
+    "address.service",
     "cenblock.directive"]);
 })();
