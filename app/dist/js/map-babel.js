@@ -26,10 +26,11 @@
             },
             templateUrl: "templates/leafletMap.html",
             controller: ['$scope', '$http', '$q', 'leafletData', 'leafletMapEvents', 'leafletMapDefaults', 'mapFactory', 'blockFactory', 'addressFactory', function ($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory, blockFactory, addressFactory) {
-
                 $scope.blockid = '';
 
                 $scope.blockLayerUrl = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Census2010/MapServer";
+
+                $scope.streetLayerUrl = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Transportation/MapServer";
 
                 $scope.markers = {};
 
@@ -47,16 +48,18 @@
                 });
 
                 //initialize map
-                $scope.initializeMap = function () {
+                $scope.initializeMap = function (mapObj) {
                     console.log(arguments.length);
                     if ($scope.initState && $scope.initCounty && $scope.initTract && $scope.initBlock) {
                         blockFactory.addBlock($scope.blockLayerUrl, $scope.initState, $scope.initCounty, $scope.initTract, $scope.initBlock).then(getBlockId);
                     } else if ($scope.initLat && $scope.initLng) {
                         blockFactory.addBlock($scope.blockLayerUrl, $scope.initLng, $scope.initLat).then(getBlockId);
                     } else {
-                        var addressSearchUrl = addressFactory.getAddressSearchUrl();
+                        var addressSearchUrl = addressFactory.getAddressSearchUrl($scope.blockLayerUrl, $scope.initZip, $scope.initPlace, $scope.initCounty, $scope.initState);
                         //mapFactory.setCenter(34.181048,-118.223644);
-                        addressFactory.addAddressSearchResults(addressSearchUrl, $scope.initStreet);
+                        addressFactory.addAddressSearchResults(addressSearchUrl).then(function (resp) {
+                            addressFactory.addAddressSearchSuccess(resp, $scope.streetLayerUrl, $scope.initStreet, mapObj);
+                        });
                     };
                 };
 
@@ -76,7 +79,9 @@
                 ///Event Listeners       
                 $scope.$on('leafletDirectiveMap.load', function (event, args) {
                     console.log('MAP LOADED');
-                    $scope.initializeMap();
+                    leafletData.getMap().then(function (map) {
+                        $scope.initializeMap(map);
+                    });
                     var layerPos = {
                         controls: $scope.controls
                     };
@@ -117,11 +122,12 @@
         var service = {
             getAddressSearchUrl: getAddressSearchUrl,
             addAddressSearchResults: addAddressSearchResults,
-            findStreet: findStreet
+            findStreet: findStreet,
+            addAddressSearchSuccess: addAddressSearchSuccess
         };
 
         function getAddressSearchUrl(mapUrl, zip, place, county, state) {
-            console.log("GET ADDRESS URL");
+            //console.log("GET ADDRESS URL");
             var queryLayer = "";
             var whereClause = "";
 
@@ -138,44 +144,118 @@
                 queryLayer = "/98";
                 whereClause = "state='" + state + "'";
             } else {
-                mapFactory.setCenter(44, -99, 5);
+                mapFactory.setCenter();
                 return '';
             };
             return [mapUrl, queryLayer, "/query?geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&returnCountOnly=false&returnIdsOnly=false&returnGeometry=true&outSR=4326&outFields=*&f=json&where=", encodeURIComponent(whereClause)].join('');
         };
 
-        function addAddressSearchResults(searchUrl, initStreet) {
-            console.log("ADD ADDRESS SEARCH RESULTS");
-            $http.get(searchUrl).then(function (resp) {
-                console.log("ADDRESS SEARCH RESULTS SUCCESS");
-
-                if (initStreet) {
-                    findStreet(initStreet, resp.data.features[0].geometry.rings);
-                };
-
-                var lat = parseFloat(resp.data.features[0].attributes["CENTLAT"]);
-                var lng = parseFloat(resp.data.features[0].attributes["CENTLON"]);
-                mapFactory.setCenter(lat, lng, 10);
-            });
+        function addAddressSearchResults(searchUrl) {
+            //console.log("ADD ADDRESS SEARCH RESULTS");
+            //console.log("mapObj: ", mapObj);
+            //console.log("searchUrl: ", searchUrl);
+            return $http.get(searchUrl);
         };
 
-        function findStreet(street, geojsonRings) {
-            console.log("FIND STREET");
-            var streetGeojson = {
+        function addAddressSearchSuccess(resp, streetBaseUrl, street, mapObj) {
+            console.log("ADDRESS SEARCH RESULTS SUCCESS");
+            console.log(resp);
+            if (!resp || !resp.data.features || resp.data.features.length === 0) {
+                mapFactory.setCenter();
+            } else {
+                if (street) {
+                    findStreet(streetBaseUrl, street, resp.data.features[0].geometry.rings).then(function (resp) {
+                        return streetResultsFuzzySearch(resp, street);
+                    }).then(function (resp) {
+                        console.log("RETURN FIND STREET PROMISE");
+                        console.log(resp);
+                        var streetBounds = resp.getBounds();
+                        var sw = streetBounds.getSouthWest();
+                        var ne = streetBounds.getNorthEast();
+                        var bounds = L.latLngBounds(sw, ne);
+                        mapObj.fitBounds(bounds);
+                    }, function (failResp) {
+                        ////console.log("RETURN FIND STREET REJECT");
+                        var sw = bBox.getSouthWest();
+                        var ne = bBox.getNorthEast();
+                        var bounds = L.latLngBounds(sw, ne);
+                        mapObj.fitBounds(bounds);
+                    });
+                } else {
+                    var lat = parseFloat(resp.data.features[0].attributes["CENTLAT"]);
+                    var lng = parseFloat(resp.data.features[0].attributes["CENTLON"]);
+                    mapFactory.setCenter(lat, lng, 10);
+                };
+            };
+        }
+
+        function findStreet(baseUrl, street, geojsonRings) {
+            //console.log("FIND STREET");
+            var searchBounds = mapFactory.getBoundingBox(geojsonRings);
+            var searchUrl = getFindStreetSearchUrl(baseUrl, street, searchBounds);
+            return $http.get(searchUrl);
+        };
+
+        function getFindStreetSearchUrl(urlBase, street, bbox) {
+            console.log("getFindStreetSearchUrl");
+            //console.log(urlBase, street, bbox);
+            var searchBounds = bbox.getWest() + "," + bbox.getSouth() + "," + bbox.getEast() + "," + bbox.getNorth();
+            //console.log(searchBounds);
+            var geoType = "esriGeometryEnvelope";
+            var whereClause = "upper(NAME)+like+'%25" + street.toUpperCase() + "%25'";
+            //console.log("pre poststring");
+            var poststring = "geometry=" + encodeURIComponent(searchBounds) + "&geometryType=" + geoType + "&mapExtent=" + encodeURIComponent(searchBounds) + "&layers=all:" + encodeURIComponent("2,3,8") + "&layerDefs=" + "2%3A" + whereClause + "%3B3%3A" + whereClause + "%3B8%3A" + whereClause + "&tolerance=1&sr=4326&time=&layerTimeOptions=&imageDisplay=100%2C100%2C96&returnGeometry=true&maxAllowableOffset=&geometryPrecision=&dynamicLayers=&returnZ=false&returnM=false&gdbVersion=&f=json";
+
+            return [urlBase, '/identify?', poststring].join('');
+        };
+
+        function streetResultsFuzzySearch(resp, street) {
+            console.log("streetResultsFuzzySearch", resp);
+            //console.log("FIND STREET RESULTS SUCCESS");                			
+            var deferred = $q.defer();
+            var results = resp.data.results;
+            //console.log(results);
+
+            var foundStreet = {
                 "type": "Feature",
                 "properties": {
-                    "name": "Street Search Area"
+                    "name": "Zoom To Street"
                 },
                 "geometry": {
-                    "type": "MultiPolygon",
-                    "coordinates": [geojsonRings]
+                    "type": "MultiLineString",
+                    "coordinates": []
                 }
             };
+            if (results.length === 0) {
+                deferred.reject("No streets found");
+            } else {
+                if (results.length === 1) {
+                    foundStreet.geometry.coordinates = results[0].geometry.paths;
+                } else {
+                    //console.log("start fuzzy search");
+                    var fuzzyStreet = FuzzySet([street]);
+                    var fuzzyStreetResult = [0, "na"];
+                    var fuzzyIndex = 0;
 
-            var streetSearchArea = L.geoJson(streetSearchArea);
-            console.log(streetSearchArea);
+                    for (var g = 0, glen = results.length; g < glen; g++) {
+                        var res = fuzzyStreet.get(results[g].attributes.NAME, [[0, "na"]])[0];
+                        if (res[0] > fuzzyStreetResult[0]) {
+                            fuzzyStreetResult = res;
+                            fuzzyIndex = g;
+                        }
+                    }
+                    //var streetPath = results[fuzzyIndex].geometry.paths;
+                    foundStreet.geometry.coordinates = results[fuzzyIndex].geometry.paths;
+                    //console.log(foundStreet);
+                }
+
+                var foundStreetGeojson = L.geoJson(foundStreet);
+                console.log("foundStreetGeojson");
+                console.log(foundStreetGeojson.getBounds());
+                deferred.resolve(foundStreetGeojson);
+            }
+            return deferred.promise;
         };
-
         return service;
     }
 })();
@@ -369,6 +449,7 @@
         var service = {
             getControls: getControls,
             setCenter: setCenter,
+            getBoundingBox: getBoundingBox,
             center: center
         };
 
@@ -385,9 +466,26 @@
 
         function setCenter(lat, lng, zoom) {
             console.log("SET CENTER");
-            center.lat = lat;
-            center.lng = lng;
-            center.zoom = zoom;
+            center.lat = lat || 44;
+            center.lng = lng || -99;
+            center.zoom = zoom || 5;
+        };
+
+        function getBoundingBox(rings) {
+            console.log("GET BOUNDING BOX");
+            var streetGeojson = {
+                "type": "Feature",
+                "properties": {
+                    "name": "Street Search Area"
+                },
+                "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": [rings]
+                }
+            };
+
+            var streetSearchArea = L.geoJson(streetGeojson);
+            return streetSearchArea.getBounds();
         };
 
         return service;
