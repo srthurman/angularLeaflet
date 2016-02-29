@@ -11,7 +11,6 @@
         var service = {
             getAddressSearchUrl: getAddressSearchUrl,
             addAddressSearchResults: addAddressSearchResults,
-            findStreet: findStreet,
             addAddressSearchSuccess: addAddressSearchSuccess
         };
 
@@ -62,7 +61,8 @@
                 if (street) {
                     findStreet(streetBaseUrl, street, resp.data.features[0].geometry.rings)
                     .then(
-                        function(resp) { return streetResultsFuzzySearch(resp, street); }
+                        function(resp) { return streetResultsFuzzySearch(resp, street); },
+                        function(resp) { alert("There was a problem getting the street from the server!"); }
                     )
                     .then(
                         function(resp) {

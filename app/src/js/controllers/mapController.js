@@ -24,14 +24,14 @@
                     initPlace: "@place"
                 },
                 templateUrl: "templates/leafletMap.html",
-                controller: ['$scope', '$http', '$q', 'leafletData', 'leafletMapEvents', 'leafletMapDefaults', 'mapFactory', 'blockFactory', 'addressFactory',
-                    function($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory, blockFactory, addressFactory) {
+                controller: ['$scope', 'leafletData', 'leafletMapEvents', 'leafletMapDefaults', 'mapFactory', 'blockFactory', 'addressFactory',
+                    function($scope, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory, blockFactory, addressFactory) {
                         $scope.blockid = '';
 
                         $scope.blockLayerUrl = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Census2010/MapServer";
-                        
+
                         $scope.streetLayerUrl = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Transportation/MapServer";
-                        
+
                         $scope.markers = {};
 
                         $scope.eventBroadcast = ['click', 'zoomstart'];
@@ -40,14 +40,14 @@
 
                         $scope.controls = mapFactory.getControls();
 
-                        $scope.center = mapFactory.center;
+                        $scope.center = mapFactory.getCenter();
 
-                        leafletData.getLayers().then(function(data) {
-                            console.log(data);
-                            $scope.baseLayer = data.baselayers.transportation;
-                        });
+                        leafletData.getLayers()
+                            .then(function(data) {
+                                console.log(data);
+                                $scope.baseLayer = data.baselayers.transportation;
+                            });
 
-                        //initialize map
                         $scope.initializeMap = function(mapObj) {
                             console.log(arguments.length);
                             if ($scope.initState && $scope.initCounty && $scope.initTract && $scope.initBlock) {
@@ -62,9 +62,12 @@
                                 var addressSearchUrl = addressFactory.getAddressSearchUrl($scope.blockLayerUrl, $scope.initZip, $scope.initPlace, $scope.initCounty, $scope.initState);
                                 //mapFactory.setCenter(34.181048,-118.223644);
                                 addressFactory.addAddressSearchResults(addressSearchUrl)
-                                .then(
-                                    function (resp) {addressFactory.addAddressSearchSuccess(resp, $scope.streetLayerUrl, $scope.initStreet, mapObj );}
-                                );
+                                    .then(
+                                        function(resp) {
+                                            addressFactory.addAddressSearchSuccess(resp, $scope.streetLayerUrl, $scope.initStreet, mapObj);
+                                        },
+                                        requestErrorAlert
+                                    );
                             };
 
                         };
@@ -87,14 +90,12 @@
 
                         ///Event Listeners        
                         $scope.$on('leafletDirectiveMap.load', function(event, args) {
-                            console.log('MAP LOADED');
                             leafletData.getMap().then(function(map) {
                                 $scope.initializeMap(map);
                             });
                             var layerPos = {
                                 controls: $scope.controls
                             };
-                            console.log(layerPos);
                             leafletMapDefaults.setDefaults(layerPos, '');
                         });
 
@@ -108,6 +109,10 @@
                                 .then(getBlockId);
                         });
 
+                        //Utility functions
+                        function requestErrorAlert() {
+                            alert("Oh Noes! There was an error contacting the server!");
+                        };
                     }
                 ]
             }

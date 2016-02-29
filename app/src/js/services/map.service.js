@@ -10,24 +10,30 @@
             lat: 0,
             lng: 0,
             zoom: 14
-        }
+        };
+
+        var controls = {
+            scale: true,
+            layers: {
+                visible: true,
+                position: "topright",
+                collapsed: true
+            }
+        };
 
         var service = {
             getControls: getControls,
             setCenter: setCenter,
-            getBoundingBox: getBoundingBox,
-            center: center
+            getCenter: getCenter,
+            getBoundingBox: getBoundingBox
         };
 
         function getControls() {
-            return {
-                scale: true,
-                layers: {
-                    visible: true,
-                    position: "topright",
-                    collapsed: true
-                }
-            };
+            return controls;
+        };
+
+        function getCenter() {
+            return center;
         };
 
         function setCenter(lat, lng, zoom) {
@@ -53,6 +59,8 @@
             var streetSearchArea = L.geoJson(streetGeojson);
             return streetSearchArea.getBounds();
         };
+
+
 
         return service;
 

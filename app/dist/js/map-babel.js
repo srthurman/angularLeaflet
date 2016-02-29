@@ -25,7 +25,7 @@
                 initPlace: "@place"
             },
             templateUrl: "templates/leafletMap.html",
-            controller: ['$scope', '$http', '$q', 'leafletData', 'leafletMapEvents', 'leafletMapDefaults', 'mapFactory', 'blockFactory', 'addressFactory', function ($scope, $http, $q, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory, blockFactory, addressFactory) {
+            controller: ['$scope', 'leafletData', 'leafletMapEvents', 'leafletMapDefaults', 'mapFactory', 'blockFactory', 'addressFactory', function ($scope, leafletData, leafletMapEvents, leafletMapDefaults, mapFactory, blockFactory, addressFactory) {
                 $scope.blockid = '';
 
                 $scope.blockLayerUrl = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Census2010/MapServer";
@@ -40,14 +40,13 @@
 
                 $scope.controls = mapFactory.getControls();
 
-                $scope.center = mapFactory.center;
+                $scope.center = mapFactory.getCenter();
 
                 leafletData.getLayers().then(function (data) {
                     console.log(data);
                     $scope.baseLayer = data.baselayers.transportation;
                 });
 
-                //initialize map
                 $scope.initializeMap = function (mapObj) {
                     console.log(arguments.length);
                     if ($scope.initState && $scope.initCounty && $scope.initTract && $scope.initBlock) {
@@ -59,7 +58,7 @@
                         //mapFactory.setCenter(34.181048,-118.223644);
                         addressFactory.addAddressSearchResults(addressSearchUrl).then(function (resp) {
                             addressFactory.addAddressSearchSuccess(resp, $scope.streetLayerUrl, $scope.initStreet, mapObj);
-                        });
+                        }, requestErrorAlert);
                     };
                 };
 
@@ -78,14 +77,12 @@
 
                 ///Event Listeners       
                 $scope.$on('leafletDirectiveMap.load', function (event, args) {
-                    console.log('MAP LOADED');
                     leafletData.getMap().then(function (map) {
                         $scope.initializeMap(map);
                     });
                     var layerPos = {
                         controls: $scope.controls
                     };
-                    console.log(layerPos);
                     leafletMapDefaults.setDefaults(layerPos, '');
                 });
 
@@ -97,6 +94,11 @@
                     $scope.markers = blockFactory.moveMarker(leafEventLatLng.lat, leafEventLatLng.lng);
                     blockFactory.addBlock($scope.blockLayerUrl, leafEventLatLng.lng, leafEventLatLng.lat).then(getBlockId);
                 });
+
+                //Utility functions
+                function requestErrorAlert() {
+                    alert("Oh Noes! There was an error contacting the server!");
+                };
             }]
         };
     });
@@ -122,7 +124,6 @@
         var service = {
             getAddressSearchUrl: getAddressSearchUrl,
             addAddressSearchResults: addAddressSearchResults,
-            findStreet: findStreet,
             addAddressSearchSuccess: addAddressSearchSuccess
         };
 
@@ -166,6 +167,8 @@
                 if (street) {
                     findStreet(streetBaseUrl, street, resp.data.features[0].geometry.rings).then(function (resp) {
                         return streetResultsFuzzySearch(resp, street);
+                    }, function (resp) {
+                        alert("There was a problem getting the street from the server!");
                     }).then(function (resp) {
                         console.log("RETURN FIND STREET PROMISE");
                         console.log(resp);
@@ -446,22 +449,28 @@
             zoom: 14
         };
 
+        var controls = {
+            scale: true,
+            layers: {
+                visible: true,
+                position: "topright",
+                collapsed: true
+            }
+        };
+
         var service = {
             getControls: getControls,
             setCenter: setCenter,
-            getBoundingBox: getBoundingBox,
-            center: center
+            getCenter: getCenter,
+            getBoundingBox: getBoundingBox
         };
 
         function getControls() {
-            return {
-                scale: true,
-                layers: {
-                    visible: true,
-                    position: "topright",
-                    collapsed: true
-                }
-            };
+            return controls;
+        };
+
+        function getCenter() {
+            return center;
         };
 
         function setCenter(lat, lng, zoom) {
